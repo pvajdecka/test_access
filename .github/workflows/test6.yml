@@ -1,0 +1,42 @@
+# .github/workflows/ssh-with-temp-sg-rule.yml
+name: unlock-ec2-for-runner
+on: workflow_dispatch
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    env:
+      SG_ID: sg-0123abcd4567ef890    # <— replace
+      TARGET_IP: 18.215.219.106
+      USER: ubuntu
+    steps:
+      - name: Install deps
+        run: sudo apt-get -y install jq awscli
+
+      - name: Get runner public IPv4
+        id: ip
+        run: |
+          MYIP=$(curl -s https://api.ipify.org)
+          echo "ip=$MYIP" >> "$GITHUB_OUTPUT"
+
+      - name: Authorize ingress
+        run: |
+          aws ec2 authorize-security-group-ingress \
+            --group-id "$SG_ID" \
+            --protocol tcp --port 22 \
+            --cidr "${{ steps.ip.outputs.ip }}/32"
+        shell: bash
+
+      - name: SSH and print success
+        run: |
+          set -e
+          ssh -o BatchMode=yes $USER@$TARGET_IP 'echo success'
+        shell: bash
+
+      - name: Revoke ingress
+        if: always()
+        run: |
+          aws ec2 revoke-security-group-ingress \
+            --group-id "$SG_ID" \
+            --protocol tcp --port 22 \
+            --cidr "${{ steps.ip.outputs.ip }}/32"
