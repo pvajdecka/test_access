@@ -1,0 +1,16 @@
+# .github/workflows/ssh-probe.yml
+name: raw-ssh-probe
+
+on:
+  workflow_dispatch:            # trigger it manually
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest      # GitHub-hosted runner
+    steps:
+      - name: Run SSH and print success
+        run: |
+          set -e                             # fail immediately on any non-zero exit
+          ssh ubuntu@18.215.219.106          # ← the exact command you requested
+          echo "success"                     # runs only if SSH above exited 0
+
