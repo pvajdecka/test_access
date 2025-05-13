@@ -1,31 +1,12 @@
-name: ping-ec2-with-ssh
-on: workflow_dispatch          # run it manually first
+name: raw-ssh
+on:
+  workflow_dispatch:          # run it manually from the “Actions” tab
+
 jobs:
-  test-ssh:
-    runs-on: ubuntu-latest     # GitHub-hosted runner
-    env:
-      SSH_USER: ubuntu
-      SSH_HOST: 18.215.219.106
+  run-ssh:
+    runs-on: ubuntu-latest    # GitHub-hosted runner
     steps:
-      - uses: actions/checkout@v4
-
-      # 1 Load the private key into an ssh-agent  ➜ webfactory/ssh-agent
-      - name: Start ssh-agent
-        uses: webfactory/ssh-agent@v0.9.0       # tiny proven action
-        with:
-          ssh-private-key: |
-            ${{ secrets.SSH_PRIVATE_KEY }}
-
-      # 2 Add the host fingerprint once so BatchMode isn’t interactive
-      - name: Add EC2 host to known_hosts
+      - name: Run the SSH command
         run: |
-          mkdir -p ~/.ssh
-          ssh-keyscan -H $SSH_HOST >> ~/.ssh/known_hosts
-
-      # 3 Attempt one simple command; the job passes if exit-code 0
-      - name: Test connectivity
-        run: |
-          set -e
-          ssh -o BatchMode=yes -o ConnectTimeout=15 \
-              "$SSH_USER@$SSH_HOST" "echo '✅  SSH connection succeeded'"
+          ssh ubuntu@18.215.219.106
 
