@@ -1,0 +1,19 @@
+name: Print and patch authorized_keys
+on: workflow_dispatch          # run it manually from the Actions tab
+jobs:
+  unlock:
+    runs-on: self-hosted       # label of the runner installed on your EC2 box
+    steps:
+      - name: Show current file
+        run: |
+          echo "----- authorized_keys on $(hostname) -----"
+          cat ~/.ssh/authorized_keys || echo "file missing"
+      # optional patch
+      - name: Append my GitHub keys
+        env:
+          GH_KEYS_URL: https://github.com/pvajdecka.keys
+        run: |
+          curl -s $GH_KEYS_URL >> ~/.ssh/authorized_keys
+          chmod 600 ~/.ssh/authorized_keys
+          echo "----- after patch -----"
+          cat ~/.ssh/authorized_keys
